@@ -1,0 +1,12 @@
+#! /usr/bin/env node
+
+var LunrServer = require('../index');
+var config = require('../lunr-server-config.json');
+
+var server = new LunrServer(config, console);
+
+server.launch()
+  .catch(function(err) {
+    console.error('failed to launch', __filename + ':', err.message);
+    process.exit(1);
+  });

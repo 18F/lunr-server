@@ -1,0 +1,32 @@
+{
+  "name": "lunr-server",
+  "version": "0.0.0",
+  "description": "A standalone server for a Lunr.js search corpus",
+  "main": "index.js",
+  "scripts": {
+    "test": "gulp test",
+    "lint": "gulp lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/18F/lunr-server.git"
+  },
+  "keywords": [
+    "Lunr.js",
+    "search"
+  ],
+  "author": "Mike Bland <michael.bland@gsa.gov> (https://18f.gsa.gov/)",
+  "license": "CC0-1.0",
+  "bugs": {
+    "url": "https://github.com/18F/lunr-server/issues"
+  },
+  "homepage": "https://github.com/18F/lunr-server#readme",
+  "dependencies": {
+    "lunr": "^0.6.0"
+  },
+  "devDependencies": {
+    "eslint": "^1.10.3",
+    "gulp": "^3.9.0",
+    "gulp-eslint": "^1.1.1"
+  }
+}
