@@ -103,6 +103,6 @@ function handleRequest(lunrServer, req, res) {
     }
   });
   response = JSON.stringify(results);
-  console.log('q: "' + queryParams + '" r:', response);
+  console.log('q:', queryParams);
   res.end(response);
 }
