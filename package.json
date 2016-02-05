@@ -1,6 +1,6 @@
 {
   "name": "lunr-server",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "description": "A standalone server for a Lunr.js search corpus",
   "main": "index.js",
   "scripts": {
