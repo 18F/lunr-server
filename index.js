@@ -19,6 +19,10 @@ function LunrServer(config, logger) {
   });
 }
 
+LunrServer.versionString = function() {
+  return packageInfo.name + ' v' + packageInfo.version;
+};
+
 LunrServer.prototype.launch = function() {
   var lunrServer = this;
 
@@ -26,12 +30,9 @@ LunrServer.prototype.launch = function() {
     return loadIndex(lunrServer, corpusSpec);
   }))
   .then(function() {
-    lunrServer.httpServer = new http.Server(function(req, res) {
-      handleRequest(lunrServer, req, res);
+    return new Promise(function(resolve, reject) {
+      launchServer(lunrServer, reject);
     });
-    lunrServer.logger.log(
-      packageInfo.name + ': listening on port', lunrServer.port);
-    lunrServer.httpServer.listen(lunrServer.port);
   });
 };
 
@@ -65,6 +66,20 @@ function parseCorpus(corpusSpec, indexPath, corpus) {
       reject(new Error('failed to parse ' + indexPath + ': ' + err));
     }
   });
+}
+
+function launchServer(lunrServer, reject) {
+  lunrServer.httpServer = new http.Server(function(req, res) {
+    handleRequest(lunrServer, req, res);
+  });
+
+  lunrServer.httpServer.on('error', function(err) {
+    reject(err);
+  });
+
+  lunrServer.logger.log(
+    packageInfo.name + ': listening on port', lunrServer.port);
+  lunrServer.httpServer.listen(lunrServer.port);
 }
 
 function handleRequest(lunrServer, req, res) {
