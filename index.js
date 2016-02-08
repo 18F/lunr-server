@@ -26,6 +26,14 @@ LunrServer.versionString = function() {
 LunrServer.prototype.launch = function() {
   var lunrServer = this;
 
+  this.corpora.map(function(corpusSpec) {
+    var watcher = fs.watch(
+      corpusSpec['indexPath'],
+      (event, filename) => {
+        loadIndex(lunrServer, corpusSpec);
+      });
+    });
+
   return Promise.all(this.corpora.map(function(corpusSpec) {
     return loadIndex(lunrServer, corpusSpec);
   }))
