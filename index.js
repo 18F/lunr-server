@@ -23,11 +23,12 @@ LunrServer.versionString = function() {
   return packageInfo.name + ' v' + packageInfo.version;
 };
 
-LunrServer.prototype.launch = function() {
+LunrServer.prototype.prepare = function() {
   var lunrServer = this;
 
-  this.corpora.map(function(corpusSpec) {
-    var watcher = fs.watch(
+  this.watchers = this.corpora.map(function(corpusSpec) {
+    // reload an index when child corpus changes it
+    return fs.watch(
       corpusSpec['indexPath'],
       (event, filename) => {
         loadIndex(lunrServer, corpusSpec);
@@ -36,11 +37,35 @@ LunrServer.prototype.launch = function() {
 
   return Promise.all(this.corpora.map(function(corpusSpec) {
     return loadIndex(lunrServer, corpusSpec);
-  }))
-  .then(function() {
+  }));
+}
+
+LunrServer.prototype.launch = function() {
+  var lunrServer = this;
+
+  this.prepare().then(function() {
     return new Promise(function(resolve, reject) {
       launchServer(lunrServer, reject);
     });
+  });
+};
+
+LunrServer.prototype.close = function() {
+  var lunrServer = this;
+
+  return new Promise(function(resolve, reject) {
+    var finish = function(err) {
+      err ? reject(err) : resolve();
+    };
+
+    lunrServer.watchers.forEach(function(watcher) {
+      watcher.close();
+    });
+    if (lunrServer.httpServer) {
+      lunrServer.httpServer.close(finish);
+    } else {
+      finish();
+    }
   });
 };
 
