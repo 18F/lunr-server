@@ -7,6 +7,8 @@ var path = require('path');
 var packageInfo = require('./package.json');
 var querystring = require('querystring');
 var url = require('url');
+const EventEmitter = require('events');
+
 
 module.exports = LunrServer;
 
@@ -36,6 +38,7 @@ LunrServer.prototype.prepare = function() {
     });
 
   return Promise.all(this.corpora.map(function(corpusSpec) {
+    corpusSpec.eventEmitter = new EventEmitter();
     return loadIndex(lunrServer, corpusSpec);
   }));
 }
@@ -94,6 +97,7 @@ function parseCorpus(corpusSpec, indexPath, corpus) {
       Object.keys(rawJson).forEach(function(key) {
         corpusSpec[key] = rawJson[key];
       });
+      corpusSpec.eventEmitter.emit('refreshed');
       resolve();
     } catch (err) {
       reject(new Error('failed to parse ' + indexPath + ': ' + err));
