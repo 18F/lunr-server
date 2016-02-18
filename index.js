@@ -35,13 +35,13 @@ LunrServer.prototype.prepare = function() {
       (event, filename) => {
         loadIndex(lunrServer, corpusSpec);
       });
-    });
+  });
 
   return Promise.all(this.corpora.map(function(corpusSpec) {
     corpusSpec.eventEmitter = new EventEmitter();
     return loadIndex(lunrServer, corpusSpec);
   }));
-}
+};
 
 LunrServer.prototype.launch = function() {
   var lunrServer = this;
