@@ -5,7 +5,6 @@ var LunrServer = require('../index');
 var chai = require('chai');
 var chaiAsPromised = require('chai-as-promised');
 var expect = chai.expect;
-var dummy_logger = require('simple-node-logger').createSimpleLogger();
 var util = require('util');
 
 chai.should();
@@ -25,32 +24,36 @@ describe ('TestHarness', function() {
       serverPrep,
       corpus;
 
-  lunrServer = new LunrServer(config);
-  fs.createReadStream(
-    './test/indexes/search-index-one-short-page.json'
-  ).pipe(fs.createWriteStream(config.corpora[0].indexPath));
+  before(function() {
+    lunrServer = new LunrServer(config);
+    fs.createReadStream(
+      './test/indexes/search-index-one-short-page.json'
+    ).pipe(fs.createWriteStream(config.corpora[0].indexPath));
+  });
+
+  after(function() {
+    return lunrServer.close();
+  });
 
   describe('Index change detection', function() {
     it('Should find terms after refresh', function() {
       return lunrServer.prepare().should.be.fulfilled
-        .then(function() {
-          corpus = lunrServer.corpora[0];
-
-          // 'ignorance'.should.equal('strength');
-
-          corpus.eventEmitter.on('refreshed', function() {
-            // These events clearly run; however, the result
-            // of the assert doesn't become part of the
-            // test results
-            process.stdout.write('refresh event detected');
-            'slavery'.should.equal('freedom');
+        .then(function () {
+          return new Promise(function(resolve) {
+            corpus = lunrServer.corpora[0];
+            fs.createReadStream(
+              './test/indexes/search-index-two-short-pages.json'
+            ).pipe(fs.createWriteStream(config.corpora[0].indexPath));
+            corpus.eventEmitter.on('refreshed', resolve);
           });
+        })
+        .then(function() {
+          process.stdout.write('Promise `then` has fired\n');
+          'war'.should.equal('peace');
 
-          fs.createReadStream(
-            './test/indexes/search-index-two-short-pages.json'
-          ).pipe(fs.createWriteStream(config.corpora[0].indexPath));
+          process.stdout.write('state of promise is\n');
+          process.stdout.write('\n');
         });
     });
   });
-  return lunrServer.close();
 });
