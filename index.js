@@ -7,6 +7,8 @@ var path = require('path');
 var packageInfo = require('./package.json');
 var querystring = require('querystring');
 var url = require('url');
+const EventEmitter = require('events');
+
 
 module.exports = LunrServer;
 
@@ -23,16 +25,50 @@ LunrServer.versionString = function() {
   return packageInfo.name + ' v' + packageInfo.version;
 };
 
+LunrServer.prototype.prepare = function() {
+  var lunrServer = this;
+
+  this.watchers = this.corpora.map(function(corpusSpec) {
+    // reload an index when child corpus changes it
+    return fs.watch(
+      corpusSpec['indexPath'],
+      (event, filename) => {
+        loadIndex(lunrServer, corpusSpec);
+      });
+  });
+
+  return Promise.all(this.corpora.map(function(corpusSpec) {
+    corpusSpec.eventEmitter = new EventEmitter();
+    return loadIndex(lunrServer, corpusSpec);
+  }));
+};
+
 LunrServer.prototype.launch = function() {
   var lunrServer = this;
 
-  return Promise.all(this.corpora.map(function(corpusSpec) {
-    return loadIndex(lunrServer, corpusSpec);
-  }))
-  .then(function() {
+  this.prepare().then(function() {
     return new Promise(function(resolve, reject) {
       launchServer(lunrServer, reject);
     });
+  });
+};
+
+LunrServer.prototype.close = function() {
+  var lunrServer = this;
+
+  return new Promise(function(resolve, reject) {
+    var finish = function(err) {
+      err ? reject(err) : resolve();
+    };
+
+    lunrServer.watchers.forEach(function(watcher) {
+      watcher.close();
+    });
+    if (lunrServer.httpServer) {
+      lunrServer.httpServer.close(finish);
+    } else {
+      finish();
+    }
   });
 };
 
@@ -61,6 +97,7 @@ function parseCorpus(corpusSpec, indexPath, corpus) {
       Object.keys(rawJson).forEach(function(key) {
         corpusSpec[key] = rawJson[key];
       });
+      corpusSpec.eventEmitter.emit('refreshed');
       resolve();
     } catch (err) {
       reject(new Error('failed to parse ' + indexPath + ': ' + err));
