@@ -28,19 +28,25 @@ LunrServer.versionString = function() {
 LunrServer.prototype.prepare = function() {
   var lunrServer = this;
 
-  this.watchers = this.corpora.map(function(corpusSpec) {
-    // reload an index when child corpus changes it
-    return fs.watch(
-      corpusSpec['indexPath'],
-      (event, filename) => {
+  return Promise.all(this.corpora.map(function(corpusSpec) {
+    return corpusSpecIfIndexPathExists(corpusSpec);
+  }))
+  .then(function(corpusSpecs) {
+    lunrServer.watchers = corpusSpecs.filter(function(corpusSpec) {
+      return corpusSpec !== undefined;
+    })
+    .map(function(corpusSpec) {
+      // reload an index when child corpus changes it
+      return fs.watch(corpusSpec.indexPath, () => {
         loadIndex(lunrServer, corpusSpec);
       });
-  });
+    });
 
-  return Promise.all(this.corpora.map(function(corpusSpec) {
-    corpusSpec.eventEmitter = new EventEmitter();
-    return loadIndex(lunrServer, corpusSpec);
-  }));
+    return Promise.all(lunrServer.corpora.map(function(corpusSpec) {
+      corpusSpec.eventEmitter = new EventEmitter();
+      return loadIndex(lunrServer, corpusSpec);
+    }));
+  });
 };
 
 LunrServer.prototype.launch = function() {
@@ -72,23 +78,51 @@ LunrServer.prototype.close = function() {
   });
 };
 
-function loadIndex(server, corpusSpec) {
-  var indexPath = path.join(corpusSpec.indexPath);
-
+function corpusSpecIfIndexPathExists(corpusSpec) {
   return new Promise(function(resolve, reject) {
-    fs.readFile(indexPath, 'utf8', function(err, data) {
+    fs.stat(corpusSpec.indexPath, function(err, stats) {
       if (err) {
-        return reject(new Error('failed to load ' + indexPath + ': ' + err));
+        // Corpus doesn't exist yet, or went away. May want to do a directory
+        // watch at some point if we expect indices to appear.
+        removeCorpusSpecProperties(corpusSpec);
+        return resolve();
       }
-      resolve(data);
+      stats.isFile() ?
+        resolve(corpusSpec) :
+        reject(new Error('not an index file: ' + corpusSpec.indexPath));
     });
-  })
-  .then(function(corpus) {
-    return parseCorpus(corpusSpec, indexPath, corpus);
   });
 }
 
-function parseCorpus(corpusSpec, indexPath, corpus) {
+function loadIndex(server, corpusSpec) {
+  var indexPath = path.join(corpusSpec.indexPath);
+
+  return corpusSpecIfIndexPathExists(corpusSpec)
+    .then(function(corpusSpec) {
+      if (!corpusSpec) {
+        return Promise.resolve();
+      }
+      return new Promise(function(resolve, reject) {
+        fs.readFile(indexPath, 'utf8', function(err, data) {
+          if (err) {
+            return reject(new Error('failed to load ' + indexPath +
+              ': ' + err));
+          }
+          resolve(data);
+        });
+      });
+    })
+    .then(function(corpus) {
+      return corpus ? parseCorpus(corpusSpec, corpus) : Promise.resolve();
+    });
+}
+
+function removeCorpusSpecProperties(corpusSpec) {
+  delete corpusSpec.index;
+  delete corpusSpec.urlToDoc;
+}
+
+function parseCorpus(corpusSpec, corpus) {
   return new Promise(function(resolve, reject) {
     var rawJson;
     try {
@@ -100,7 +134,7 @@ function parseCorpus(corpusSpec, indexPath, corpus) {
       corpusSpec.eventEmitter.emit('refreshed');
       resolve();
     } catch (err) {
-      reject(new Error('failed to parse ' + indexPath + ': ' + err));
+      reject(new Error('failed to parse ' + corpusSpec.indexPath + ': ' + err));
     }
   });
 }
