@@ -1,22 +1,23 @@
 'use strict';
 
-var fs = require('fs');
 var LunrServer = require('../index');
+var fs = require('fs');
+var path = require('path');
 var chai = require('chai');
 var chaiAsPromised = require('chai-as-promised');
 
 chai.should();
 chai.use(chaiAsPromised);
 
-describe ('TestHarness', function() {
+describe ('Watch corpus indexes', function() {
   var config = {
         'corpora': [
       { 'name': 'Test Index',
         'baseurl': 'https://18f.gsa.gov',
-        'indexPath': './test/indexes/search-index.json'
+        'indexPath': path.join('./test/indexes/search-index.json')
       }
         ],
-        'port': 8080
+        'port': 0
       },
       lunrServer,
       corpus;
@@ -24,7 +25,7 @@ describe ('TestHarness', function() {
   before(function() {
     lunrServer = new LunrServer(config);
     fs.createReadStream(
-      './test/indexes/search-index-one-short-page.json'
+      path.join('./test/indexes/search-index-one-short-page.json')
     ).pipe(fs.createWriteStream(config.corpora[0].indexPath));
   });
 
@@ -49,7 +50,7 @@ describe ('TestHarness', function() {
 
             // Now add page 2 to the index
             fs.createReadStream(
-              './test/indexes/search-index-two-short-pages.json'
+              path.join('./test/indexes/search-index-two-short-pages.json')
             ).pipe(fs.createWriteStream(config.corpora[0].indexPath));
 
             // This promise will be fulfilled only when
