@@ -95,12 +95,20 @@ function parseCorpus(corpusSpec, indexPath, corpus) {
       Object.keys(rawJson).forEach(function(key) {
         corpusSpec[key] = rawJson[key];
       });
+      adjustCorpusSpecProperties(corpusSpec);
       corpusSpec.eventEmitter.emit('refreshed');
       resolve();
     } catch (err) {
       reject(new Error('failed to parse ' + indexPath + ': ' + err));
     }
   });
+}
+
+function adjustCorpusSpecProperties(corpusSpec) {
+  if (corpusSpec.url_to_doc) {
+    corpusSpec.urlToDoc = corpusSpec.url_to_doc;
+    delete corpusSpec.url_to_doc;
+  }
 }
 
 function launchServer(lunrServer, resolve, reject) {
@@ -136,8 +144,7 @@ function handleRequest(lunrServer, req, res) {
         corpusResults = corpusSpec.index.search(queryParams);
 
     corpusResults = corpusResults.map(function(result) {
-      var urlToDoc = (corpusSpec.url_to_doc || corpusSpec.urlToDoc),
-          urlAndTitle = urlToDoc[result.ref];
+      var urlAndTitle = corpusSpec.urlToDoc[result.ref];
       Object.keys(urlAndTitle).forEach(function(key) {
         result[key] = urlAndTitle[key];
       });
