@@ -36,6 +36,6 @@
     "gulp-eslint": "^1.1.1",
     "gulp-mocha": "^2.2.0",
     "mocha": "^2.3.4",
-    "simple-node-logger": "^1.0"
+    "temp": "^0.8.3"
   }
 }

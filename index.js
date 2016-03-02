@@ -30,11 +30,9 @@ LunrServer.prototype.prepare = function() {
 
   this.watchers = this.corpora.map(function(corpusSpec) {
     // reload an index when child corpus changes it
-    return fs.watch(
-      corpusSpec['indexPath'],
-      (event, filename) => {
-        loadIndex(lunrServer, corpusSpec);
-      });
+    return fs.watch(corpusSpec['indexPath'], () => {
+      loadIndex(lunrServer, corpusSpec);
+    });
   });
 
   return Promise.all(this.corpora.map(function(corpusSpec) {
@@ -46,9 +44,9 @@ LunrServer.prototype.prepare = function() {
 LunrServer.prototype.launch = function() {
   var lunrServer = this;
 
-  this.prepare().then(function() {
+  return this.prepare().then(function() {
     return new Promise(function(resolve, reject) {
-      launchServer(lunrServer, reject);
+      launchServer(lunrServer, resolve, reject);
     });
   });
 };
@@ -105,7 +103,7 @@ function parseCorpus(corpusSpec, indexPath, corpus) {
   });
 }
 
-function launchServer(lunrServer, reject) {
+function launchServer(lunrServer, resolve, reject) {
   lunrServer.httpServer = new http.Server(function(req, res) {
     handleRequest(lunrServer, req, res);
   });
@@ -114,9 +112,10 @@ function launchServer(lunrServer, reject) {
     reject(err);
   });
 
-  lunrServer.logger.log(
-    packageInfo.name + ': listening on port', lunrServer.port);
   lunrServer.httpServer.listen(lunrServer.port);
+  lunrServer.logger.log(packageInfo.name + ': listening on',
+    lunrServer.httpServer.address().port);
+  resolve();
 }
 
 function handleRequest(lunrServer, req, res) {
@@ -137,7 +136,8 @@ function handleRequest(lunrServer, req, res) {
         corpusResults = corpusSpec.index.search(queryParams);
 
     corpusResults = corpusResults.map(function(result) {
-      var urlAndTitle = corpusSpec.url_to_doc[result.ref];
+      var urlToDoc = (corpusSpec.url_to_doc || corpusSpec.urlToDoc),
+          urlAndTitle = urlToDoc[result.ref];
       Object.keys(urlAndTitle).forEach(function(key) {
         result[key] = urlAndTitle[key];
       });
