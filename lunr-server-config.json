@@ -1,16 +1,12 @@
 {
   "corpora": [
-    { "name": "The Handbook",
-      "baseurl": "https://handbook.18f.gov",
-      "indexPath": "../handbook/_site/search-index.json"
-    },
     { "name": "Content Guide",
       "baseurl": "https://pages.18f.gov/content-guide",
-      "indexPath": "../content-guide/_site/search-index.json"
+      "indexPath": "https://pages.18f.gov/content-guide/search-index.json"
     },
     { "name": "Team Browser",
       "baseurl": "https://pages.18f.gov/team-browser",
-      "indexPath": "../team-browser/_site/search-index.json"
+      "indexPath": "https://pages.18f.gov/team-browser/search-index.json"
     }
   ],
   "port": 8080

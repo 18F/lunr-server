@@ -7,7 +7,7 @@ var path = require('path');
 var packageInfo = require('./package.json');
 var querystring = require('querystring');
 var url = require('url');
-const EventEmitter = require('events');
+var EventEmitter = require('events');
 
 
 module.exports = LunrServer;
@@ -30,7 +30,7 @@ LunrServer.prototype.prepare = function() {
 
   this.watchers = this.corpora.map(function(corpusSpec) {
     // reload an index when child corpus changes it
-    return fs.watch(corpusSpec['indexPath'], () => {
+    return fs.watch(corpusSpec['indexPath'], function(){
       loadIndex(lunrServer, corpusSpec);
     });
   });

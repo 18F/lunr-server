@@ -6,10 +6,6 @@ var LunrServer = require('../index');
 var fs = require('fs');
 var config = require('../lunr-server-config.json');
 var option = process.argv[2];
-var cfenv = require("cfenv");
-var appEnv = cfenv.getAppEnv();
-uri = appEnv.getServiceURL("beckley-es");
-config.app.port = appEnv.port;
 
 
 var USAGE = [
