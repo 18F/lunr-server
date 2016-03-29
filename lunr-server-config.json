@@ -1,16 +1,16 @@
 {
   "corpora": [
-    { "name": "The Hub",
-      "baseurl": "https://hub.18f.gov",
-      "indexPath": "../hub/_site/search-index.json"
+    { "name": "The Handbook",
+      "baseurl": "https://handbook.18f.gov",
+      "indexPath": "../handbook/_site/search-index.json"
     },
-    { "name": "Guides Template",
-      "baseurl": "https://pages.18f.gov/guides-template",
-      "indexPath": "../guides-template/_site/search-index.json"
+    { "name": "Content Guide",
+      "baseurl": "https://pages.18f.gov/content-guide",
+      "indexPath": "../content-guide/_site/search-index.json"
     },
-    { "name": "Unit testing in Node.js",
-      "baseurl": "https://pages.18f.gov/unit-testing-node",
-      "indexPath": "../unit-testing-node/_site/search-index.json"
+    { "name": "Team Browser",
+      "baseurl": "https://pages.18f.gov/team-browser",
+      "indexPath": "../team-browser/_site/search-index.json"
     }
   ],
   "port": 8080

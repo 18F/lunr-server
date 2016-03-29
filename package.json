@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "gulp test",
-    "lint": "gulp lint"
+    "lint": "gulp lint",
+    "start": "bin/lunr-server lunr-server-config.json"
   },
   "repository": {
     "type": "git",
@@ -25,6 +26,8 @@
   },
   "homepage": "https://github.com/18F/lunr-server#readme",
   "dependencies": {
+    "cfenv": "*",
+    "es": "*",
     "lunr": "^0.6.0"
   },
   "devDependencies": {
